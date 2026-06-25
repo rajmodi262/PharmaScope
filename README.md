@@ -29,6 +29,12 @@
 
 ## 🚀 Quickstart (full-stack)
 
+**One click (Windows):** double-click **`start.bat`** — it frees ports 8900/5180,
+installs backend + frontend dependencies, launches both servers, and opens the app
+in your browser. `stop.bat` shuts it down.
+
+<details><summary>Or run the two services manually</summary>
+
 ```bash
 # 1 — Backend (FastAPI · live pharma APIs, no keys needed)
 cd backend
@@ -40,6 +46,8 @@ cd frontend
 npm install
 npm run dev          # → http://localhost:5180  (proxies /api to :8900)
 ```
+
+</details>
 
 ## 🏗️ Architecture
 
