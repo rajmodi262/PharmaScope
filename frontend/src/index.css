@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #070b18;
+  color: #e2e8f0;
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Animated aurora mesh background */
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.aurora::before,
+.aurora::after {
+  content: "";
+  position: absolute;
+  width: 60vw;
+  height: 60vw;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.35;
+}
+.aurora::before {
+  background: radial-gradient(circle, #22d3ee, transparent 60%);
+  top: -20vw;
+  left: -10vw;
+  animation: drift1 18s ease-in-out infinite alternate;
+}
+.aurora::after {
+  background: radial-gradient(circle, #a855f7, transparent 60%);
+  bottom: -25vw;
+  right: -10vw;
+  animation: drift2 22s ease-in-out infinite alternate;
+}
+@keyframes drift1 {
+  to {
+    transform: translate(8vw, 6vw) scale(1.15);
+  }
+}
+@keyframes drift2 {
+  to {
+    transform: translate(-6vw, -8vw) scale(1.1);
+  }
+}
+
+/* Glass card */
+.glass {
+  background: rgba(19, 28, 61, 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.5);
+}
+
+.gradient-text {
+  background: linear-gradient(120deg, #22d3ee 0%, #a855f7 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
