@@ -36,32 +36,44 @@ FCST_YEARS = list(range(2025, 2031))     # 2025-2030 forecast
 # 1. REFERENCE MARKET  (deterministic, US net sales in $M)
 # ---------------------------------------------------------------------------
 def build_market() -> pd.DataFrame:
-    """Realistic US branded-Rx reference set. US net sales, $M."""
+    """Real branded-Rx reference set.
+
+    `Sales2024` = FY2024 **worldwide net sales** ($M) as reported in each
+    company's FY2024 annual report / Form 10-K (the headline figures the
+    companies themselves quote). `CAGR` is a forward growth assumption grounded
+    in the brand's recent reported trajectory; `LOEYear` is the approximate US
+    loss-of-exclusivity / key-patent-expiry year from public patent-cliff
+    coverage. The FY2024 anchor is an actual; prior years (back-cast) and
+    forward years are modelled.
+    """
     rng = np.random.default_rng(42)
-    # brand, company, therapy area, modality, 2024 US net sales ($M),
-    # pre-LOE CAGR, loss-of-exclusivity year, biosimilar/generic
+    # brand, company, therapy area, modality, FY2024 WW net sales ($M),
+    # forward CAGR, approx US loss-of-exclusivity year, erosion type
     rows = [
-        ("Keytruda-class IO", "Merck-like",     "Oncology",        "Biologic", 14200, 0.14, 2028, "Biosimilar"),
-        ("CDK4/6 inhibitor",  "Pfizer-like",     "Oncology",        "Small mol",  5200, 0.06, 2027, "Generic"),
-        ("BTK inhibitor",     "AbbVie-like",     "Oncology",        "Small mol",  4100, 0.04, 2026, "Generic"),
-        ("Anti-TNF flagship", "AbbVie-like",     "Immunology",      "Biologic",  11800, -0.09, 2023, "Biosimilar"),
-        ("IL-23 inhibitor",   "JnJ-like",        "Immunology",      "Biologic",  6900, 0.18, 2029, "Biosimilar"),
-        ("IL-4/13 inhibitor", "Regeneron-like",  "Immunology",      "Biologic",  8700, 0.22, 2030, "Biosimilar"),
-        ("GLP-1 (T2D/obesity)","NovoLilly-like", "Cardiometabolic", "Biologic",  18500, 0.31, 2031, "Biosimilar"),
-        ("SGLT2 inhibitor",   "AZ-like",         "Cardiometabolic", "Small mol",  4600, 0.09, 2025, "Generic"),
-        ("Factor Xa anticoag","BMS-like",        "Cardiometabolic", "Small mol",  6300, 0.02, 2026, "Generic"),
-        ("Anti-CGRP migraine","Lilly-like",      "Neuroscience",    "Biologic",  1900, 0.16, 2030, "Biosimilar"),
-        ("MS oral therapy",   "Novartis-like",   "Neuroscience",    "Small mol",  2400, 0.03, 2027, "Generic"),
-        ("Gene therapy (rare)","Vertex-like",    "Rare Disease",    "Cell/Gene", 1300, 0.27, 2035, "None"),
-        ("CFTR modulator",    "Vertex-like",     "Rare Disease",    "Small mol",  9100, 0.12, 2037, "Generic"),
-        ("mRNA vaccine fr.",  "Pfizer-like",     "Vaccines",        "mRNA",      3800, -0.18, 2030, "None"),
-        ("RSV vaccine",       "GSK-like",        "Vaccines",        "Biologic",  2100, 0.20, 2034, "None"),
+        ("Keytruda",  "Merck",              "Oncology",           "Biologic",  29482,  0.10, 2028, "Biosimilar"),
+        ("Ozempic",   "Novo Nordisk",       "Cardiometabolic",    "Biologic",  16700,  0.18, 2032, "Biosimilar"),
+        ("Dupixent",  "Sanofi / Regeneron", "Immunology",         "Biologic",  14150,  0.16, 2031, "Biosimilar"),
+        ("Biktarvy",  "Gilead",             "Infectious Disease", "Small mol", 13419,  0.08, 2033, "Generic"),
+        ("Eliquis",   "BMS / Pfizer",       "Cardiometabolic",    "Small mol", 13335,  0.03, 2028, "Generic"),
+        ("Skyrizi",   "AbbVie",             "Immunology",         "Biologic",  11718,  0.28, 2033, "Biosimilar"),
+        ("Darzalex",  "Johnson & Johnson",  "Oncology",           "Biologic",  11670,  0.14, 2029, "Biosimilar"),
+        ("Mounjaro",  "Eli Lilly",          "Cardiometabolic",    "Biologic",  11540,  0.40, 2036, "Biosimilar"),
+        ("Stelara",   "Johnson & Johnson",  "Immunology",         "Biologic",  10361, -0.05, 2025, "Biosimilar"),
+        ("Trikafta",  "Vertex",             "Rare Disease",       "Small mol", 10178,  0.10, 2037, "Generic"),
+        ("Opdivo",    "BMS",                "Oncology",           "Biologic",   9304,  0.05, 2028, "Biosimilar"),
+        ("Humira",    "AbbVie",             "Immunology",         "Biologic",   8993, -0.25, 2023, "Biosimilar"),
+        ("Entresto",  "Novartis",           "Cardiometabolic",    "Small mol",  7816,  0.06, 2025, "Generic"),
+        ("Tagrisso",  "AstraZeneca",        "Oncology",           "Small mol",  6576,  0.08, 2032, "Generic"),
+        ("Comirnaty", "Pfizer / BioNTech",  "Vaccines",           "mRNA",       5353, -0.20, 2030, "None"),
+        ("Verzenio",  "Eli Lilly",          "Oncology",           "Small mol",  5306,  0.18, 2030, "Generic"),
+        ("Ibrance",   "Pfizer",             "Oncology",           "Small mol",  4374, -0.05, 2027, "Generic"),
+        ("Imbruvica", "AbbVie / J&J",       "Oncology",           "Small mol",  3344, -0.12, 2032, "Generic"),
     ]
     df = pd.DataFrame(rows, columns=[
         "Brand", "Company", "TherapyArea", "Modality",
         "Sales2024", "CAGR", "LOEYear", "ErosionType"])
 
-    # back-cast actuals 2019-2024 from CAGR with light realistic noise
+    # back-cast modelled history 2019-2024 from CAGR with light realistic noise
     for y in HIST_YEARS:
         factor = (1 + df["CAGR"]) ** (y - 2024)
         noise = rng.normal(1.0, 0.03, len(df))
@@ -143,11 +155,14 @@ def generate_brief(df: pd.DataFrame) -> dict:
     opps.append(
         f"**{g0['TherapyArea']}** momentum: **{g0['Brand']}** compounding at "
         f"**{g0['CAGR']*100:+.0f}%/yr** — prioritise share-of-voice and access investment.")
-    protected = df[df["ErosionType"] == "None"]
-    if not protected.empty:
+    # durable = still growing AND no loss-of-exclusivity before 2031
+    durable = df[(df["CAGR"] > 0.05) & (df["LOEYear"] >= 2031)].sort_values("Sales2024", ascending=False)
+    if not durable.empty:
+        names = ", ".join(durable["Brand"].head(3))
+        noun = "asset" if len(durable) == 1 else "assets"
         opps.append(
-            f"**{len(protected)}** assets (gene therapy / vaccines) carry **no near-term biosimilar "
-            f"threat** — durable, defensible revenue to anchor the portfolio.")
+            f"**{len(durable)}** growing {noun} carry **no LOE before 2031** (e.g. {names}) — "
+            f"durable, defensible revenue (${durable['Sales2024'].sum()/1000:.0f}B) to anchor the portfolio.")
     declining = df[df["CAGR"] < 0]
     if not declining.empty:
         threats.append(
@@ -178,7 +193,8 @@ def render_pharma_tab():
                 unsafe_allow_html=True)
     st.markdown(
         '<div class="app-subtitle">Market sizing · brand forecasting · patent-cliff erosion · '
-        'competitive landscape · auto-generated consulting brief — modelled on US net Rx sales ($M).</div>',
+        'competitive landscape · auto-generated consulting brief — anchored on FY2024 reported '
+        'net sales ($M) from company 10-Ks.</div>',
         unsafe_allow_html=True)
 
     # ---- controls
@@ -214,7 +230,7 @@ def render_pharma_tab():
         if PLOTLY:
             fig = go.Figure()
             fig.add_trace(go.Scatter(x=HIST_YEARS, y=[v/1000 for v in hist],
-                          mode="lines+markers", name="Actual",
+                          mode="lines+markers", name="History (FY24 actual)",
                           line=dict(color="#00d4ff", width=3)))
             allx = [HIST_YEARS[-1]] + FCST_YEARS
             ally = [hist[-1]] + fc
@@ -321,5 +337,7 @@ def render_pharma_tab():
             st.markdown(f"- {x}")
     st.markdown('</div>', unsafe_allow_html=True)
 
-    st.caption("Reference market is a deterministic, seeded approximation for demonstration. "
-               "Replace `build_market()` with IQVIA / Evaluate / 10-K feeds for production use.")
+    st.caption("FY2024 net sales are **actuals from company annual reports / 10-Ks** "
+               "(worldwide net sales, $M). Prior-year history, forward forecast, LOE years and "
+               "erosion curves are modelled. Swap `build_market()` for an IQVIA / Evaluate feed "
+               "for US-specific, audited figures.")
