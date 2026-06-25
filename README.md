@@ -39,9 +39,12 @@ console** modelled on the work of a life-sciences analytics consultant:
 | 🌳 **Therapy-area treemap** | 2024 market value by area & brand, coloured by growth |
 | 📝 **Auto-generated consulting brief** | Data-driven **Insights · Opportunities · Threats** — the consulting deliverable, generated live |
 
-> Covers Oncology, Immunology, Cardiometabolic (incl. GLP-1), Neuroscience, Rare Disease & Vaccines.
-> The reference market is a deterministic, seeded approximation; swap `build_market()` for an
-> IQVIA / Evaluate / 10-K feed and the pipeline is production-ready.
+> Covers 18 leading brands — Keytruda, Ozempic, Dupixent, Mounjaro, Skyrizi, Eliquis, Biktarvy,
+> Trikafta, Humira & more — across Oncology, Immunology, Cardiometabolic (incl. GLP-1),
+> Infectious Disease, Rare Disease & Vaccines.
+> **FY2024 net sales are actuals from company annual reports / 10-Ks;** prior-year history, forward
+> forecast and LOE/erosion assumptions are modelled. Swap `build_market()` for an IQVIA / Evaluate
+> feed for US-specific audited figures and the pipeline is production-ready.
 
 **Why it maps to commercial life-sciences analytics roles:** *deep dive into datasets · extract
 key insights, opportunities and threats · advanced analysis in the Life Sciences / Pharma domain ·
