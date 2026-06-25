@@ -35,6 +35,7 @@ FCST_YEARS = list(range(2025, 2031))     # 2025-2030 forecast
 # ---------------------------------------------------------------------------
 # 1. REFERENCE MARKET  (deterministic, US net sales in $M)
 # ---------------------------------------------------------------------------
+@st.cache_data(show_spinner=False)
 def build_market() -> pd.DataFrame:
     """Real branded-Rx reference set.
 
@@ -109,10 +110,41 @@ def forecast_brand(row: pd.Series) -> dict:
     return out
 
 
+@st.cache_data(show_spinner=False)
 def build_forecast(df: pd.DataFrame) -> pd.DataFrame:
     fc = df.apply(forecast_brand, axis=1, result_type="expand")
     fc.columns = [f"F{y}" for y in FCST_YEARS]
     return pd.concat([df, fc], axis=1)
+
+
+# ---------------------------------------------------------------------------
+# 2b. LAUNCH ANALOG FORECASTER  (Bass diffusion uptake + erosion + rNPV)
+# ---------------------------------------------------------------------------
+def launch_forecast(peak: float, years_to_peak: int, launch_year: int,
+                    loe_year: int, erosion_type: str,
+                    horizon: int = 12, discount: float = 0.10,
+                    p: float = 0.03, q: float = 0.45) -> dict:
+    """Bass-diffusion launch uptake to `peak` ($M), eroded after LOE.
+
+    Returns {year: sales} plus cumulative and risk-adjusted NPV. `p` (innovation)
+    and `q` (imitation) are standard pharma launch-analog coefficients; the time
+    axis is compressed so ~95% of peak is reached by `years_to_peak`.
+    """
+    grid = np.arange(0.01, 40, 0.01)
+    F = (1 - np.exp(-(p + q) * grid)) / (1 + (q / p) * np.exp(-(p + q) * grid))
+    t95 = grid[np.argmax(F >= 0.95)] or 1.0
+    scale = t95 / max(years_to_peak, 1)
+
+    series, npv = {}, 0.0
+    for i in range(horizon + 1):
+        yr = launch_year + i
+        tau = i * scale
+        frac = ((1 - np.exp(-(p + q) * tau)) /
+                (1 + (q / p) * np.exp(-(p + q) * tau))) if tau > 0 else 0.0
+        sales = max(peak * frac * erosion_factor(yr - loe_year, erosion_type), 0.0)
+        series[yr] = sales
+        npv += sales / ((1 + discount) ** i)
+    return {"series": series, "cumulative": sum(series.values()), "npv": npv}
 
 
 # ---------------------------------------------------------------------------
@@ -203,7 +235,8 @@ def render_pharma_tab():
     with c1:
         sel = st.selectbox("🔬 Therapy area lens", areas)
     with c2:
-        view = st.radio("View", ["Market & Forecast", "Patent Cliff", "Competitive Landscape"],
+        view = st.radio("View", ["Market & Forecast", "Patent Cliff",
+                                  "Competitive Landscape", "Launch Forecaster"],
                         horizontal=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -289,7 +322,7 @@ def render_pharma_tab():
         st.dataframe(cliff, use_container_width=True, hide_index=True)
 
     # ---- VIEW 3: competitive landscape
-    else:
+    elif view == "Competitive Landscape":
         st.markdown('<div class="section-title">🏁 Competitive Landscape</div>',
                     unsafe_allow_html=True)
         if PLOTLY:
@@ -316,6 +349,45 @@ def render_pharma_tab():
         st.dataframe(comp.rename(columns={"AvgGrowth": "Avg Growth"}),
                      use_container_width=True, hide_index=True)
 
+    # ---- VIEW 4: launch analog forecaster
+    else:
+        st.markdown('<div class="section-title">🚀 Launch Analog Forecaster '
+                    '(Bass diffusion + rNPV)</div>', unsafe_allow_html=True)
+        st.markdown('<div class="app-subtitle">Model a pipeline asset\'s uptake to peak, '
+                    'patent-cliff erosion, and risk-adjusted NPV — the core launch deliverable.</div>',
+                    unsafe_allow_html=True)
+        lc1, lc2, lc3 = st.columns(3)
+        with lc1:
+            peak = st.slider("Expected peak sales ($M/yr)", 200, 20000, 4000, step=100)
+            ttp = st.slider("Years to peak", 2, 8, 5)
+        with lc2:
+            launch_yr = st.slider("Launch year", 2026, 2032, 2027)
+            loe_yr = st.slider("Loss-of-exclusivity year", 2030, 2045, 2039)
+        with lc3:
+            etype = st.selectbox("Post-LOE erosion", ["Biosimilar", "Generic", "None"])
+            disc = st.slider("Discount rate (%)", 6, 14, 10) / 100
+
+        lf = launch_forecast(peak, ttp, launch_yr, loe_yr, etype, discount=disc)
+        years = list(lf["series"].keys())
+        vals = list(lf["series"].values())
+        peak_reached = max(vals)
+        m1, m2, m3 = st.columns(3)
+        with m1: _metric_card("Peak annual sales", f"${peak_reached/1000:.2f}B", f"reached ~{launch_yr+ttp}")
+        with m2: _metric_card("Cumulative (12y)", f"${lf['cumulative']/1000:.1f}B", "undiscounted")
+        with m3: _metric_card("Risk-adjusted NPV", f"${lf['npv']/1000:.1f}B", f"@ {disc*100:.0f}% discount")
+        if PLOTLY:
+            colors = ["#10b981" if y < loe_yr else "#ef4444" for y in years]
+            fig = go.Figure(go.Bar(x=[str(y) for y in years], y=[v/1000 for v in vals],
+                                   marker_color=colors,
+                                   text=[f"{v/1000:.1f}" for v in vals], textposition="outside"))
+            fig.update_layout(template="plotly_dark", height=400,
+                              paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                              margin=dict(l=10, r=10, t=40, b=10),
+                              title=f"Modelled launch trajectory ($B) — green pre-LOE, "
+                                    f"red post-LOE ({loe_yr})",
+                              yaxis_title="$B")
+            st.plotly_chart(fig, use_container_width=True)
+
     # ---- CONSULTING BRIEF (always shown)
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown('<div class="card">', unsafe_allow_html=True)
@@ -335,6 +407,23 @@ def render_pharma_tab():
         st.markdown("#### ⚠️ Threats")
         for x in brief["threats"]:
             st.markdown(f"- {x}")
+
+    # ---- downloadable consultant deliverables
+    export = fdf[["Brand", "Company", "TherapyArea", "Modality", "Sales2024",
+                  "CAGR", "LOEYear", "ErosionType"] + [f"F{y}" for y in FCST_YEARS]]
+    brief_md = "# US Biopharma Commercial Analytics — Consulting Brief\n\n"
+    for title, key in [("Key Insights", "insights"), ("Opportunities", "opportunities"),
+                       ("Threats", "threats")]:
+        brief_md += f"## {title}\n" + "".join(f"- {x}\n" for x in brief[key]) + "\n"
+    d1, d2 = st.columns(2)
+    with d1:
+        st.download_button("⬇️ Download forecast (CSV)",
+                           export.to_csv(index=False).encode("utf-8"),
+                           "biopharma_forecast.csv", "text/csv", use_container_width=True)
+    with d2:
+        st.download_button("⬇️ Download consulting brief (Markdown)",
+                           brief_md.encode("utf-8"),
+                           "biopharma_brief.md", "text/markdown", use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.caption("FY2024 net sales are **actuals from company annual reports / 10-Ks** "
