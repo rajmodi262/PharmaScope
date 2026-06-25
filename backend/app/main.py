@@ -18,7 +18,7 @@ from .models import Intelligence
 from .services import clinicaltrials, openfda, synthesis
 
 app = FastAPI(
-    title="EconoScope · Pharma Intelligence API",
+    title="PharmaScope · Live Competitive Intelligence API",
     version="2.0.0",
     description="Live biopharma pipeline & competitive intelligence over "
                 "ClinicalTrials.gov and openFDA.",
@@ -67,7 +67,7 @@ async def intelligence(
     trials, total, regulatory, safety = [], 0, None, []
 
     try:
-        async with httpx.AsyncClient(headers={"User-Agent": "EconoScope/2.0"}) as client:
+        async with httpx.AsyncClient(headers={"User-Agent": "PharmaScope/2.0"}) as client:
             ct_task = clinicaltrials.fetch(client, q)
             label_task = openfda.fetch_label(client, q)
             safety_task = openfda.fetch_safety(client, q)
