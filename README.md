@@ -1,28 +1,69 @@
 <div align="center">
 
-# 📊 EconoScope
-### *Economic & Life-Sciences Commercial Analytics — ML Forecasting, Pharma Market Intelligence & Patent-Cliff Modelling*
+# 🧬 EconoScope · Pharma Intelligence
+### *Live biopharma pipeline & competitive intelligence — type any drug or indication, get the analyst brief.*
 
 <br>
 
-[![Python](https://img.shields.io/badge/Python-3.8%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![Streamlit](https://img.shields.io/badge/Streamlit-App-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io)
-[![Scikit-Learn](https://img.shields.io/badge/scikit--learn-ML-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white)](https://scikit-learn.org)
-[![XGBoost](https://img.shields.io/badge/XGBoost-Boosting-189AB4?style=for-the-badge)](https://xgboost.ai)
-[![LightGBM](https://img.shields.io/badge/LightGBM-Gradient-00B050?style=for-the-badge)](https://lightgbm.readthedocs.io)
-[![License](https://img.shields.io/badge/License-MIT-brightgreen?style=for-the-badge)](LICENSE)
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-async-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![Framer Motion](https://img.shields.io/badge/Framer_Motion-anim-0055FF?style=for-the-badge&logo=framer&logoColor=white)](https://www.framer.com/motion/)
+[![Live Data](https://img.shields.io/badge/Data-ClinicalTrials.gov_%2B_openFDA-22d3ee?style=for-the-badge)](https://clinicaltrials.gov)
 
 <br>
 
-> **US Biopharma commercial analytics** — market sizing, brand-level forecasting,
-> patent-cliff (LOE) erosion modelling, competitive landscaping and an
-> auto-generated **Insights / Opportunities / Threats** consulting brief —
-> *plus* a full **macro GDP forecasting engine** (25 World Bank indicators, 10 ML models),
-> all in one real-time Streamlit console.
+> Search a molecule or indication → EconoScope queries **ClinicalTrials.gov** and
+> **openFDA** *live*, then structures the result into a competitive pipeline,
+> sponsor leaderboard, regulatory profile, real-world safety signals, and an
+> auto-generated **Insights / Opportunities / Threats** analyst brief.
+>
+> **Real data. No mock-ups.** Try `semaglutide` (736 trials, Novo Nordisk leads),
+> `pembrolizumab` (11,500+ trials), or `obesity`.
 
 <br>
 
 </div>
+
+---
+
+## 🚀 Quickstart (full-stack)
+
+```bash
+# 1 — Backend (FastAPI · live pharma APIs, no keys needed)
+cd backend
+pip install -r requirements.txt
+uvicorn app.main:app --port 8900
+
+# 2 — Frontend (React + Vite + Tailwind + Framer Motion)
+cd frontend
+npm install
+npm run dev          # → http://localhost:5180  (proxies /api to :8900)
+```
+
+## 🏗️ Architecture
+
+```
+React + TS + Tailwind + Framer Motion        FastAPI (async httpx)            Live public APIs
+┌─────────────────────────────────┐   REST   ┌──────────────────────────┐    ┌──────────────────┐
+│ search-driven dashboard          │ ───────> │ GET /api/intelligence    │ ─> │ ClinicalTrials.gov│
+│ stat cards · pipeline · sponsors │ <─────── │ • concurrent asyncio.gather│ <─ │ openFDA (label +  │
+│ momentum · safety · analyst brief│          │ • Pydantic-typed contract │    │   FAERS events)   │
+│ animated, exportable brief       │          │ • 12h disk cache + fallback│    └──────────────────┘
+└─────────────────────────────────┘          └──────────────────────────┘
+```
+
+**Engineering highlights:** concurrent live API calls (`asyncio.gather`), a single
+Pydantic-typed response contract mirrored by the TypeScript client, a 12-hour disk
+cache with **stale-fallback so a flaky upstream never blanks the screen**, and a
+deterministic rule-based synthesis layer (no LLM dependency → demo-safe). The
+analyst brief and trial data export to Markdown / CSV for hand-off.
+
+> The original **Streamlit analytics console** (GDP ML forecasting + modelled
+> pharma market sizing & patent-cliff analysis) remains in `app.py` as a secondary
+> module — see below.
+
+---
 
 ---
 
