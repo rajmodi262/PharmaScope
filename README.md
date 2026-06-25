@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🧬 EconoScope · Pharma Intelligence
+# 🧬 PharmaScope
 ### *Live biopharma pipeline & competitive intelligence — type any drug or indication, get the analyst brief.*
 
 <br>
@@ -13,7 +13,7 @@
 
 <br>
 
-> Search a molecule or indication → EconoScope queries **ClinicalTrials.gov** and
+> Search a molecule or indication → PharmaScope queries **ClinicalTrials.gov** and
 > **openFDA** *live*, then structures the result into a competitive pipeline,
 > sponsor leaderboard, regulatory profile, real-world safety signals, and an
 > auto-generated **Insights / Opportunities / Threats** analyst brief.
@@ -67,9 +67,11 @@ cache with **stale-fallback so a flaky upstream never blanks the screen**, and a
 deterministic rule-based synthesis layer (no LLM dependency → demo-safe). The
 analyst brief and trial data export to Markdown / CSV for hand-off.
 
-> The original **Streamlit analytics console** (GDP ML forecasting + modelled
-> pharma market sizing & patent-cliff analysis) remains in `app.py` as a secondary
-> module — see below.
+> **The "Scope" family.** PharmaScope is the live competitive-intelligence product.
+> Its sibling **EconoScope** — a macroeconomic GDP-forecasting console (10 ML models,
+> 25 World Bank indicators) plus a modelled pharma market-sizing / patent-cliff /
+> launch-NPV analytics layer — lives in `app.py` + `pharma_analytics.py` as a
+> secondary Streamlit module (documented below).
 
 ---
 

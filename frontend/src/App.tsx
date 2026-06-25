@@ -35,7 +35,7 @@ export default function App() {
     if (!data) return;
     const b = data.brief;
     const md = [
-      `# Pharma Intelligence Brief — ${query}`,
+      `# PharmaScope — Competitive Intelligence Brief — ${query}`,
       `_Generated ${data.meta.fetched_at} · Sources: ${data.meta.sources.join(", ")}_\n`,
       `**${data.summary.total_trials.toLocaleString()}** registered trials · ` +
         `**${data.summary.active_trials}** active · ` +
@@ -67,10 +67,10 @@ export default function App() {
             </div>
             <div>
               <div className="font-bold tracking-tight leading-none">
-                Econo<span className="gradient-text">Scope</span>
+                Pharma<span className="gradient-text">Scope</span>
               </div>
               <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500">
-                Pharma Intelligence
+                Competitive Intelligence
               </div>
             </div>
           </div>
