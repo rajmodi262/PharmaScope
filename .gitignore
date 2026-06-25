@@ -1,1 +1,3 @@
 gdp/
+__pycache__/
+*.pyc
