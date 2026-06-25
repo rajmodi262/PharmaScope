@@ -214,23 +214,42 @@ def load_safe(path, default=None):
     except Exception:
         return default
 
-encoder = load_safe(os.path.join(models_dir, "encoder.pkl"))
-scaler = load_safe(os.path.join(models_dir, "scaling_pipeline.pkl"))
-df_imputed = load_safe(os.path.join(models_dir, "df_imputed.pkl"))
-columns_index = load_safe(os.path.join(models_dir, "X_columns.pkl"))
-metrics_csv_path = os.path.join(models_dir, "model_metrics.csv")
-metrics_df = pd.read_csv(metrics_csv_path) if os.path.exists(metrics_csv_path) else pd.DataFrame()
-log_flag = load_safe(os.path.join(models_dir, "log_target_flag.pkl"), False)
+# Cache the heavy artifact load (incl. ~94MB Random Forest) so it runs ONCE per
+# session instead of on every widget interaction — major responsiveness win.
+@st.cache_resource(show_spinner="Loading models & artifacts…")
+def load_all_artifacts(_dir):
+    artifacts = {
+        "encoder": load_safe(os.path.join(_dir, "encoder.pkl")),
+        "scaler": load_safe(os.path.join(_dir, "scaling_pipeline.pkl")),
+        "df_imputed": load_safe(os.path.join(_dir, "df_imputed.pkl")),
+        "columns_index": load_safe(os.path.join(_dir, "X_columns.pkl")),
+        "log_flag": load_safe(os.path.join(_dir, "log_target_flag.pkl"), False),
+    }
+    reserved = ("encoder.pkl", "scaling_pipeline.pkl", "df_imputed.pkl",
+                "X_columns.pkl", "log_target_flag.pkl")
+    mdls = {}
+    for f in os.listdir(_dir):
+        if f.endswith(".pkl") and f not in reserved:
+            try:
+                mdls[f.replace(".pkl", "").replace("_", " ").title()] = \
+                    joblib.load(os.path.join(_dir, f))
+            except Exception:
+                continue
+    artifacts["models"] = mdls
+    return artifacts
 
-# Load models
-models = {}
-for f in os.listdir(models_dir):
-    if f.endswith(".pkl") and f not in ("encoder.pkl", "scaling_pipeline.pkl", "df_imputed.pkl", "X_columns.pkl", "log_target_flag.pkl"):
-        try:
-            name = f.replace(".pkl", "").replace("_", " ").title()
-            models[name] = joblib.load(os.path.join(models_dir, f))
-        except Exception:
-            continue
+@st.cache_data(show_spinner=False)
+def load_metrics(path):
+    return pd.read_csv(path) if os.path.exists(path) else pd.DataFrame()
+
+_art = load_all_artifacts(models_dir)
+encoder = _art["encoder"]
+scaler = _art["scaler"]
+df_imputed = _art["df_imputed"]
+columns_index = _art["columns_index"]
+log_flag = _art["log_flag"]
+models = _art["models"]
+metrics_df = load_metrics(os.path.join(models_dir, "model_metrics.csv"))
 
 if df_imputed is None:
     st.error("⚠️ Could not load df_imputed.pkl — preprocessing reference missing.")

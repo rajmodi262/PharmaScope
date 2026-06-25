@@ -37,7 +37,12 @@ console** modelled on the work of a life-sciences analytics consultant:
 | ⏳ **Patent-cliff / LOE modelling** | Year-by-year sales-at-risk from loss of exclusivity, with distinct **generic vs biosimilar** erosion curves |
 | 🏁 **Competitive landscape** | Share-vs-growth bubble map and company-level share table |
 | 🌳 **Therapy-area treemap** | 2024 market value by area & brand, coloured by growth |
-| 📝 **Auto-generated consulting brief** | Data-driven **Insights · Opportunities · Threats** — the consulting deliverable, generated live |
+| 🚀 **Launch analog forecaster** | Bass-diffusion uptake to peak + patent-cliff erosion + **risk-adjusted NPV** for a pipeline asset — the core launch deliverable, fully interactive |
+| 📝 **Auto-generated consulting brief** | Data-driven **Insights · Opportunities · Threats**, with one-click **CSV + Markdown export** for hand-off |
+
+> ⚡ **Performance:** heavy artifacts (incl. a ~94MB Random Forest) and the pharma dataset are
+> cached with `@st.cache_resource` / `@st.cache_data`, so they load once per session — widget
+> interactions stay instant.
 
 > Covers 18 leading brands — Keytruda, Ozempic, Dupixent, Mounjaro, Skyrizi, Eliquis, Biktarvy,
 > Trikafta, Humira & more — across Oncology, Immunology, Cardiometabolic (incl. GLP-1),
